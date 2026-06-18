@@ -1,0 +1,177 @@
+diff --git a/qtbase/src/3rdparty/sqlite/qt_attribution.json b/qtbase/src/3rdparty/sqlite/qt_attribution.json
+index bfcbc793d6..9b216b69eb 100644
+--- a/qtbase/src/3rdparty/sqlite/qt_attribution.json
++++ b/qtbase/src/3rdparty/sqlite/qt_attribution.json
+@@ -6,8 +6,8 @@
+
+     "Description": "SQLite is a small C library that implements a self-contained, embeddable, zero-configuration SQL database engine.",
+     "Homepage": "https://www.sqlite.org/",
+-    "Version": "3.43.1",
+-    "DownloadLocation": "https://sqlite.org/2023/sqlite-amalgamation-3430100.zip",
++    "Version": "3.44.2",
++    "DownloadLocation": "https://www.sqlite.org/2023/sqlite-amalgamation-3440200.zip",
+     "License": "Public Domain",
+     "LicenseId": "CC0-1.0",
+     "Copyright": "The authors disclaim copyright to the source code. However, a license can be obtained if needed."
+diff --git a/qtbase/src/plugins/platforms/windows/qwindowspointerhandler.cpp b/qtbase/src/plugins/platforms/windows/qwindowspointerhandler.cpp
+index 4d30ec0..857ab7d 100644
+--- a/qtbase/src/plugins/platforms/windows/qwindowspointerhandler.cpp
++++ b/qtbase/src/plugins/platforms/windows/qwindowspointerhandler.cpp
+@@ -43,12 +43,49 @@ QWindowsPointerHandler::~QWindowsPointerHandler()
+ {
+ }
+ 
++template<typename T, typename U>
++static QString dumpMapContent(const QHash<T, U>& p_map, bool p_dumpValue = true)
++{
++    QStringList entries;
++    entries.reserve(p_map.size());
++    for (auto it = p_map.cbegin(), end = p_map.cend(); it != end; ++it)
++    {
++        if (p_dumpValue)
++        {
++            entries.emplaceBack(QString::fromUtf8("%1 <-> %2")
++                                .arg(QVariant::fromValue(it.key()).toString())
++                                .arg(QVariant::fromValue(it.value()).toString()));
++        }
++        else
++        {
++            entries.emplaceBack(QString::fromUtf8("%1").arg(QVariant::fromValue(it.key()).toString()));
++        }
++    }
++
++    QString result;
++    QTextStream(&result) << "{ " << entries.join(QStringLiteral(", ")) << " }";
++    return result;
++}
++
+ bool QWindowsPointerHandler::translatePointerEvent(QWindow *window, HWND hwnd, QtWindows::WindowsEventType et, MSG msg, LRESULT *result)
+ {
+     *result = 0;
+     const quint32 pointerId = GET_POINTERID_WPARAM(msg.wParam);
+ 
+     if (!GetPointerType(pointerId, &m_pointerType)) {
+-        qWarning() << "GetPointerType() failed:" << qt_error_string();
++        qWarning()  << "GetPointerType() failed on pointerId:" << pointerId
++                    << ", m_touchInputIDToTouchPointID: " << dumpMapContent(m_touchInputIDToTouchPointID)
++                    << ", m_lastTouchPoints: " << dumpMapContent(m_lastTouchPoints, false)
++                    << ", error:" << qt_error_string();
++
+
++        int id = m_touchInputIDToTouchPointID.value(pointerId, -1);
++
++        if (id != -1)
++        {
++            if (m_lastTouchPoints.remove(id))
++            {
++                qInfo() << "Cleaning m_lastTouchPoints, successful removal of touchPointId:" << id;
++            }
++        }
++
+         return false;
+     }
+diff --git a/qtbase/src/plugins/sqldrivers/sqlite/CMakeLists.txt b/qtbase/src/plugins/sqldrivers/sqlite/CMakeLists.txt
+index 1fba18290b..6df1157bd1 100644
+--- a/qtbase/src/plugins/sqldrivers/sqlite/CMakeLists.txt
++++ b/qtbase/src/plugins/sqldrivers/sqlite/CMakeLists.txt
+@@ -33,6 +33,8 @@ if (NOT QT_FEATURE_system_sqlite)
+     qt_disable_warnings(QSQLiteDriverPlugin)
+ endif()
+
++file(TO_CMAKE_PATH "${OPENSSL_ROOT_DIR}" OPENSSL_CMAKE_PATH)
++
+ if(QT_FEATURE_system_sqlite)
+     qt_internal_force_macos_intel_arch(QSQLiteDriverPlugin)
+ endif()
+@@ -41,6 +43,15 @@ qt_internal_extend_target(QSQLiteDriverPlugin CONDITION NOT QT_FEATURE_system_sq
+     SOURCES
+         ../../../3rdparty/sqlite/sqlite3.c
+     DEFINES
++       _CRT_SECURE_NO_DEPRECATE
++       _CRT_SECURE_NO_WARNINGS
++       _CRT_NONSTDC_NO_DEPRECATE
++       _CRT_NONSTDC_NO_WARNINGS
++       SQLITE_THREADSAFE=1
++       SQLITE_THREAD_OVERRIDE_LOCK=-1
++       SQLITE_TEMP_STORE=2
++       SQLITE_HAS_CODEC
++       SQLITE_MAX_TRIGGER_DEPTH=100
+         SQLITE_ENABLE_COLUMN_METADATA
+         SQLITE_ENABLE_FTS3
+         SQLITE_ENABLE_FTS3_PARENTHESIS
+@@ -51,8 +62,19 @@ qt_internal_extend_target(QSQLiteDriverPlugin CONDITION NOT QT_FEATURE_system_sq
+         SQLITE_ENABLE_MATH_FUNCTIONS
+         SQLITE_ENABLE_RTREE
+         SQLITE_OMIT_COMPLETE
++       SQLITE_ENABLE_STMTVTAB=1
++       SQLITE_ENABLE_DBPAGE_VTAB=1
++       SQLITE_ENABLE_DBSTAT_VTAB=1
++       SQLITE_ENABLE_BYTECODE_VTAB=1
++       SQLITE_ENABLE_DESERIALIZE=1
++       SQLITE_ENABLE_EXPLAIN_COMMENTS=1
++       SQLITE_ENABLE_OFFSET_SQL_FUNC=1
++       SQLITE_ENABLE_LOAD_EXTENSION=1
++       HAVE_READLINE=0
++       SQLITE_ENABLE_UNKNOWN_SQL_FUNCTION
+     INCLUDE_DIRECTORIES
+         ../../../3rdparty/sqlite
++        ${OPENSSL_CMAKE_PATH}/include
+ )
+
+ qt_internal_extend_target(QSQLiteDriverPlugin CONDITION CMAKE_BUILD_TYPE STREQUAL Release AND NOT QT_FEATURE_system_sqlite
+@@ -80,18 +104,32 @@ qt_internal_extend_target(QSQLiteDriverPlugin CONDITION QNX AND NOT QT_FEATURE_s
+ qt_internal_extend_target(QSQLiteDriverPlugin CONDITION UNIX AND NOT QT_FEATURE_system_sqlite
+     DEFINES
+         HAVE_USLEEP=1
++        HAVE_SQLITE_CONFIG_H=1
++        SQLITE_OS_UNIX=1
++        HAVE_EDITLINE=1
++        SQLCIPHER_CRYPTO_OPENSSL
+ )
+
+-qt_internal_extend_target(QSQLiteDriverPlugin CONDITION INTEGRITY
+-    COMPILE_OPTIONS -include qplatformdefs.h
++qt_internal_extend_target(QSQLiteDriverPlugin CONDITION WIN32 AND NOT QT_FEATURE_system_sqlite
++    COMPILE_OPTIONS
++        -nologo
++        -fp:precise
++    DEFINES
++        INCLUDE_MSVC_H=1
++        SQLITE_OS_WIN=1
+ )
+
+-qt_internal_extend_target(QSQLiteDriverPlugin CONDITION QT_FEATURE_dlopen AND NOT QT_FEATURE_system_sqlite
++qt_internal_extend_target(QSQLiteDriverPlugin CONDITION QT_FEATURE_openssl_linked
+     LIBRARIES
+-        ${CMAKE_DL_LIBS}
++        WrapOpenSSL::WrapOpenSSL
+ )
+
+-qt_internal_extend_target(QSQLiteDriverPlugin CONDITION NOT QT_FEATURE_dlopen AND NOT QT_FEATURE_system_sqlite
+-    DEFINES
+-        SQLITE_OMIT_LOAD_EXTENSION
++qt_internal_extend_target(QSQLiteDriverPlugin CONDITION NOT QT_FEATURE_openssl_linked
++    LIBRARIES
++        WrapOpenSSLHeaders::WrapOpenSSLHeaders
++)
++
++qt_internal_extend_target(QSQLiteDriverPlugin CONDITION QT_FEATURE_dlopen AND NOT QT_FEATURE_system_sqlite
++    LIBRARIES
++        ${CMAKE_DL_LIBS}
+ )
+diff --git a/qtmultimedia/src/multimedia/audio/qsoundeffect.cpp b/qtmultimedia/src/multimedia/audio/qsoundeffect.cpp
+index 36a0e58ca6..9e281ccc15 100644
+--- a/qtmultimedia/src/multimedia/audio/qsoundeffect.cpp
++++ b/qtmultimedia/src/multimedia/audio/qsoundeffect.cpp
+@@ -286,6 +286,11 @@ QSoundEffect::~QSoundEffect()
+     if (d->m_audioOutput) {
+         d->m_audioOutput->stop();
+         d->m_audioOutput->deleteLater();
++    }
++    // KNG: in the original code, d->m_sample->release() was called after d->m_audioOutput->deleteLater() inside the last if statement
++    // This does not release m_sample correctly when m_audioOutput is nullptr
++    // Therefore the following if statement is added to correctly release it
++    if (d->m_sample) {
+         d->m_sample->release();
+     }
+     delete d;

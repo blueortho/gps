@@ -1,0 +1,19 @@
+dependencies:
+  ../qtdeclarative:
+    ref: e00c258fa5a4e122636d441967dea035865fac5d
+    required: true
+  ../qthttpserver:
+    ref: ca210c68db122f7b163f34080fcbc93005920456
+    required: false
+  ../qtmultimedia:
+    ref: 0762bb1e91495527f0978232212521c49291f7de
+    required: false
+  ../qtshadertools:
+    ref: 8354edb19012d4ffda1da8678a840659574f3f1c
+    required: false
+  ../qttools:
+    ref: 3a0c45ad9c86dc1c62384575f69eddc8f3fddf35
+    required: true
+  ../qtwebengine:
+    ref: 864b08394d1e6d366d7c136ffc50e27adfd08447
+    required: false

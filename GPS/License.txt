@@ -1,1 +1,62 @@
-TODO fill
+BLUE-ORTHO END USER LICENSE AGREEMENT (EULA)
+EDIT DATE: 2026-05-19
+
+IMPORTANT – READ CAREFULLY:
+This End User License Agreement ("Agreement") is a legal contract between you ("User" or "Licensee")
+and Blue Ortho ("Licensor") regarding your use of the Blue Ortho software product ("Software")
+either deployed in your personal computer or embedded in the computer station made available for
+the purpose of implanting medical devices.
+
+By installing, copying, or otherwise using the Software, you agree to be bound by the terms of
+this Agreement. If you do not agree, do not install or use the Software.
+
+1. License Grant
+Blue Ortho grants you a non-exclusive, non-transferable, and limited license to use the Software
+solely for your internal business purposes or clinical use, and only as expressly authorized by
+this Agreement.
+
+2. Restrictions
+You may not:
+- Modify, reverse engineer, decompile, or disassemble the Software, except to the extent permitted
+  by applicable law.
+- Rent, lease, sublicense, distribute, or otherwise transfer the Software to any third party.
+- Remove or alter any proprietary notices or labels on the Software.
+
+3. Ownership
+The Software is licensed, not sold. Blue Ortho retains all rights, title, and interest in and to
+the Software, including all intellectual property rights.
+
+4. Open Source Components
+The Software may include or be distributed with certain third-party open-source software
+components. These components are governed by their respective open-source licenses, which are
+separate from this Agreement.
+A complete list of included open-source components, along with their licenses and relevant
+resources, is available in the software.
+
+You may use, modify, and distribute these open-source components under the terms of their respective
+licenses. Blue Ortho provides these open-source components "as is", without warranty of any kind.
+
+5. Warranty Disclaimer
+Any modification of the software device not authorized by the manufacturer voids the device
+certification and releases the manufacturer from any associated liability.
+
+6. Limitation of Liability
+In no event shall Blue Ortho be liable for any damages arising out of the use or inability to use
+the Software, even if Blue Ortho has been advised of the possibility of such damages.
+
+7. Termination
+This Agreement is effective until terminated. You may terminate it at any time by destroying all
+copies of the Software. This Agreement will terminate immediately without notice from Blue Ortho
+if you fail to comply with any term of this Agreement.
+
+8. Governing Law
+This Agreement shall be governed by and construed in accordance with the laws of France, without
+regard to its conflict of law principles.
+
+9. Entire Agreement
+This Agreement constitutes the entire agreement between you and Blue Ortho regarding the Software
+and supersedes all prior or contemporaneous understandings.
+
+If you have any questions regarding this Agreement, please contact:
+Blue Ortho Legal Department
+Email: service@blue-ortho.com

@@ -1,0 +1,448 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2664fc3..fb4bc43 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -150,7 +150,8 @@ set (	project_source_files
+ 		${CMAKE_CURRENT_SOURCE_DIR}/source/bvh.cpp
+ 		${CMAKE_CURRENT_SOURCE_DIR}/source/shewchuk.c
+ 		${CMAKE_CURRENT_SOURCE_DIR}/source/frontend.cpp
+-		${CMAKE_CURRENT_SOURCE_DIR}/source/preproc.cpp)
++		${CMAKE_CURRENT_SOURCE_DIR}/source/preproc.cpp
++		${CMAKE_CURRENT_SOURCE_DIR}/source/validity.cpp)
+ 
+ #
+ # Create MCUT target(s)
+@@ -278,7 +279,7 @@ endif()
+ #
+ # headers
+ #
+-install(FILES ${MCUT_INCLUDE_DIR}/mcut/mcut.h ${MCUT_INCLUDE_DIR}/mcut/platform.h
++install(FILES ${MCUT_INCLUDE_DIR}/mcut/mcut.h ${MCUT_INCLUDE_DIR}/mcut/platform.h ${MCUT_INCLUDE_DIR}/mcut/validity.h
+   		DESTINATION include/mcut
+ 	  	COMPONENT headers)
+ 	  
+diff --git a/include/mcut/validity.h b/include/mcut/validity.h
+new file mode 100644
+index 0000000..aba45de
+--- /dev/null
++++ b/include/mcut/validity.h
+@@ -0,0 +1,14 @@
++#ifndef _VALIDITY_H_
++#define _VALIDITY_H_
++
++#include "mcut/mcut.h"
++
++extern "C" bool test_manifold(
++    McFlags flags,
++    const McVoid* pSrcMeshVertices,
++    const uint32_t* pSrcMeshFaceIndices,
++    const uint32_t* pSrcMeshFaceSizes,
++    uint32_t numSrcMeshVertices,
++    uint32_t numSrcMeshFaces);
++
++#endif // _VALIDITY_H_
+\ No newline at end of file
+diff --git a/source/shewchuk.c b/source/shewchuk.c
+index 86792d0..159a26b 100644
+--- a/source/shewchuk.c
++++ b/source/shewchuk.c
+@@ -1420,42 +1420,42 @@ REAL *h;
+ /*                                                                           */
+ /*****************************************************************************/
+ 
+-int compress(elen, e, h)                         /* e and h may be the same. */
+-int elen;
+-REAL *e;
+-REAL *h;
+-{
+-  REAL Q, q;
+-  INEXACT REAL Qnew;
+-  int eindex, hindex;
+-  INEXACT REAL bvirt;
+-  REAL enow, hnow;
+-  int top, bottom;
+-
+-  bottom = elen - 1;
+-  Q = e[bottom];
+-  for (eindex = elen - 2; eindex >= 0; eindex--) {
+-    enow = e[eindex];
+-    Fast_Two_Sum(Q, enow, Qnew, q);
+-    if (q != 0) {
+-      h[bottom--] = Qnew;
+-      Q = q;
+-    } else {
+-      Q = Qnew;
+-    }
+-  }
+-  top = 0;
+-  for (hindex = bottom + 1; hindex < elen; hindex++) {
+-    hnow = h[hindex];
+-    Fast_Two_Sum(hnow, Q, Qnew, q);
+-    if (q != 0) {
+-      h[top++] = q;
+-    }
+-    Q = Qnew;
+-  }
+-  h[top] = Q;
+-  return top + 1;
+-}
++// int compress(elen, e, h)                         /* e and h may be the same. */
++// int elen;
++// REAL *e;
++// REAL *h;
++// {
++//   REAL Q, q;
++//   INEXACT REAL Qnew;
++//   int eindex, hindex;
++//   INEXACT REAL bvirt;
++//   REAL enow, hnow;
++//   int top, bottom;
++
++//   bottom = elen - 1;
++//   Q = e[bottom];
++//   for (eindex = elen - 2; eindex >= 0; eindex--) {
++//     enow = e[eindex];
++//     Fast_Two_Sum(Q, enow, Qnew, q);
++//     if (q != 0) {
++//       h[bottom--] = Qnew;
++//       Q = q;
++//     } else {
++//       Q = Qnew;
++//     }
++//   }
++//   top = 0;
++//   for (hindex = bottom + 1; hindex < elen; hindex++) {
++//     hnow = h[hindex];
++//     Fast_Two_Sum(hnow, Q, Qnew, q);
++//     if (q != 0) {
++//       h[top++] = q;
++//     }
++//     Q = Qnew;
++//   }
++//   h[top] = Q;
++//   return top + 1;
++// }
+ 
+ /*****************************************************************************/
+ /*                                                                           */
+@@ -5686,42 +5686,42 @@ REAL* h;
+ /*                                                                           */
+ /*****************************************************************************/
+ 
+-int compress(elen, e, h) /* e and h may be the same. */
+-    int elen;
+-REAL* e;
+-REAL* h;
+-{
+-    REAL Q, q;
+-    INEXACT REAL Qnew;
+-    int eindex, hindex;
+-    INEXACT REAL bvirt;
+-    REAL enow, hnow;
+-    int top, bottom;
+-
+-    bottom = elen - 1;
+-    Q = e[bottom];
+-    for (eindex = elen - 2; eindex >= 0; eindex--) {
+-        enow = e[eindex];
+-        Fast_Two_Sum(Q, enow, Qnew, q);
+-        if (q != 0) {
+-            h[bottom--] = Qnew;
+-            Q = q;
+-        } else {
+-            Q = Qnew;
+-        }
+-    }
+-    top = 0;
+-    for (hindex = bottom + 1; hindex < elen; hindex++) {
+-        hnow = h[hindex];
+-        Fast_Two_Sum(hnow, Q, Qnew, q);
+-        if (q != 0) {
+-            h[top++] = q;
+-        }
+-        Q = Qnew;
+-    }
+-    h[top] = Q;
+-    return top + 1;
+-}
++// int compress(elen, e, h) /* e and h may be the same. */
++//     int elen;
++// REAL* e;
++// REAL* h;
++// {
++//     REAL Q, q;
++//     INEXACT REAL Qnew;
++//     int eindex, hindex;
++//     INEXACT REAL bvirt;
++//     REAL enow, hnow;
++//     int top, bottom;
++
++//     bottom = elen - 1;
++//     Q = e[bottom];
++//     for (eindex = elen - 2; eindex >= 0; eindex--) {
++//         enow = e[eindex];
++//         Fast_Two_Sum(Q, enow, Qnew, q);
++//         if (q != 0) {
++//             h[bottom--] = Qnew;
++//             Q = q;
++//         } else {
++//             Q = Qnew;
++//         }
++//     }
++//     top = 0;
++//     for (hindex = bottom + 1; hindex < elen; hindex++) {
++//         hnow = h[hindex];
++//         Fast_Two_Sum(hnow, Q, Qnew, q);
++//         if (q != 0) {
++//             h[top++] = q;
++//         }
++//         Q = Qnew;
++//     }
++//     h[top] = Q;
++//     return top + 1;
++// }
+ 
+ /*****************************************************************************/
+ /*                                                                           */
+diff --git a/source/validity.cpp b/source/validity.cpp
+new file mode 100644
+index 0000000..b93f2f2
+--- /dev/null
++++ b/source/validity.cpp
+@@ -0,0 +1,236 @@
++#include "mcut/validity.h"
++#include "mcut/internal/frontend.h"
++#include "mcut/internal/bvh.h"
++#include "mcut/internal/hmesh.h"
++#include "mcut/internal/kernel.h"
++#include "mcut/internal/math.h"
++#include "mcut/internal/timer.h"
++#include "mcut/internal/utils.h"
++
++#include <numeric> // std::partial_sum
++#include <queue>
++#include <random> // for numerical perturbation
++
++bool client_input_arrays_to_hmesh_validity(
++    McFlags dispatchFlags,
++    hmesh_t& halfedgeMesh,
++    double& bboxDiagonal,
++    const void* pVertices,
++    const McUint32* pFaceIndices,
++    const McUint32* pFaceSizes,
++    const McUint32 numVertices,
++    const McUint32 numFaces,
++    const vec3* perturbation = NULL)
++{
++    SCOPED_TIMER(__FUNCTION__);
++
++    // minor optimization
++    halfedgeMesh.reserve_for_additional_elements(numVertices);
++
++    TIMESTACK_PUSH("add vertices");
++
++    // did the user provide vertex arrays of 32-bit floats...?
++    if (dispatchFlags & MC_DISPATCH_VERTEX_ARRAY_FLOAT) {
++        const float* vptr = reinterpret_cast<const float*>(pVertices);
++
++        // for each input mesh-vertex
++        for (McUint32 i = 0; i < numVertices; ++i) {
++            const float& x = vptr[(i * 3) + 0];
++            const float& y = vptr[(i * 3) + 1];
++            const float& z = vptr[(i * 3) + 2];
++
++            // insert our vertex into halfedge mesh
++            vd_t vd = halfedgeMesh.add_vertex(
++                double(x) + (perturbation != NULL ? (*perturbation).x() : double(0.)),
++                double(y) + (perturbation != NULL ? (*perturbation).y() : double(0.)),
++                double(z) + (perturbation != NULL ? (*perturbation).z() : double(0.)));
++
++            MCUT_ASSERT(vd != hmesh_t::null_vertex() && (McUint32)vd < numVertices);
++        }
++    }
++    // did the user provide vertex arrays of 64-bit double...?
++    else if (dispatchFlags & MC_DISPATCH_VERTEX_ARRAY_DOUBLE) {
++        const double* vptr = reinterpret_cast<const double*>(pVertices);
++
++        // for each input mesh-vertex
++        for (McUint32 i = 0; i < numVertices; ++i) {
++            const double& x = vptr[(i * 3) + 0];
++            const double& y = vptr[(i * 3) + 1];
++            const double& z = vptr[(i * 3) + 2];
++
++            // insert our vertex into halfedge mesh
++            vd_t vd = halfedgeMesh.add_vertex(
++                double(x) + (perturbation != NULL ? (*perturbation).x() : double(0.)),
++                double(y) + (perturbation != NULL ? (*perturbation).y() : double(0.)),
++                double(z) + (perturbation != NULL ? (*perturbation).z() : double(0.)));
++
++            MCUT_ASSERT(vd != hmesh_t::null_vertex() && (McUint32)vd < numVertices);
++        }
++    }
++
++    TIMESTACK_POP(); // TIMESTACK_PUSH("add vertices");
++
++    // compute the mesh bounding box while we are at it (for numerical perturbation)
++    vec3 bboxMin(1e10);
++    vec3 bboxMax(-1e10);
++
++    TIMESTACK_PUSH("create bbox");
++    for (vertex_array_iterator_t i = halfedgeMesh.vertices_begin(); i != halfedgeMesh.vertices_end(); ++i) {
++        const vec3& coords = halfedgeMesh.vertex(*i);
++        bboxMin = compwise_min(bboxMin, coords);
++        bboxMax = compwise_max(bboxMax, coords);
++    }
++    bboxDiagonal = length(bboxMax - bboxMin);
++    TIMESTACK_POP(); // TIMESTACK_PUSH("create bbox");
++
++    TIMESTACK_PUSH("create faces");
++
++    const bool assume_triangle_mesh = (pFaceSizes == nullptr);
++
++
++    int faceSizeOffset = 0;
++    std::vector<vd_t> faceVertices;
++
++    for (McUint32 i = 0; i < numFaces; ++i) {
++        faceVertices.clear();
++        int face_vertex_count = assume_triangle_mesh ? 3 : ((McUint32*)pFaceSizes)[i];
++
++        if (face_vertex_count < 3) {
++            printf("Invalid face size\n");
++            return false;
++        }
++
++        for (int j = 0; j < face_vertex_count; ++j) {
++
++            McUint32 idx = ((McUint32*)pFaceIndices)[faceSizeOffset + j];
++
++            if (idx >= numVertices) {
++                printf("Invalid vertex index\n");
++                return false;
++            }
++
++            const vertex_descriptor_t descr(idx); // = fIter->second; //vmap[*fIter.first];
++            const bool isDuplicate = std::find(faceVertices.cbegin(), faceVertices.cend(), descr) != faceVertices.cend();
++
++            if (isDuplicate) {
++                printf("Duplicate vertex in face\n");
++                return false;
++            }
++
++            faceVertices.push_back(descr);
++        }
++
++        fd_t fd = halfedgeMesh.add_face(faceVertices);
++
++        if (fd == hmesh_t::null_face()) {
++            printf("Failed to add face\n");
++            return false;
++        }
++
++        faceSizeOffset += face_vertex_count;
++    }
++
++    TIMESTACK_POP(); //  TIMESTACK_PUSH("create faces");
++
++    return true;
++}
++
++bool is_coplanar_validity(const hmesh_t& m, const fd_t& f, int& fv_count)
++{
++    const std::vector<vd_t> vertices = m.get_vertices_around_face(f);
++    fv_count = (int)vertices.size();
++    if (fv_count > 3) // non-triangle
++    {
++        for (int i = 0; i < (fv_count - 3); ++i) {
++            const int j = (i + 1) % fv_count;
++            const int k = (i + 2) % fv_count;
++            const int l = (i + 3) % fv_count;
++
++            const vd_t& vi = vertices[i];
++            const vd_t& vj = vertices[j];
++            const vd_t& vk = vertices[k];
++            const vd_t& vl = vertices[l];
++
++            const vec3& vi_coords = m.vertex(vi);
++            const vec3& vj_coords = m.vertex(vj);
++            const vec3& vk_coords = m.vertex(vk);
++            const vec3& vl_coords = m.vertex(vl);
++
++            const bool are_coplaner = coplaner(vi_coords, vj_coords, vk_coords, vl_coords);
++
++            if (!are_coplaner) {
++                return false;
++            }
++        }
++    }
++    return true;
++}
++
++// check that the halfedge-mesh version of a user-provided mesh is valid (i.e.
++// it is a non-manifold mesh containing a single connected component etc.)
++bool check_input_mesh_validity(const hmesh_t& m)
++{
++    if (m.number_of_vertices() < 3) {
++        printf("Mesh has less than 3 vertices\n");
++        return false;
++    }
++
++    if (m.number_of_faces() < 1) {
++        printf("Mesh has no faces\n");
++        return false;
++    }
++
++    std::vector<int> fccmap;
++    std::vector<int> cc_to_vertex_count;
++    std::vector<int> cc_to_face_count;
++    int n = find_connected_components(fccmap, m, cc_to_vertex_count, cc_to_face_count);
++
++    if (n != 1) {
++        printf("ERRO: Mesh as %d connected components\n", n);
++        return false;
++    }
++
++    // check that the vertices of each face are co-planar
++    for (face_array_iterator_t f = m.faces_begin(); f != m.faces_end(); ++f) {
++        int fv_count = 0;
++        const bool face_is_coplanar = is_coplanar_validity(m, *f, fv_count);
++        if (!face_is_coplanar) {
++            // No need to return false, simply warn. It is difficult to
++            // know whether the non-coplanarity is severe enough to cause
++            // confusion when computing intersection points between two
++            // polygons (min=2 but sometimes can get 1 due to non-coplanarity
++            // of face vertices).
++            // In general, the more vertices on a face, the less likely
++            // they are to be co-planar. Faces with a low number of polygons
++            // are ideal (3 vertices being the best)
++            // result = false;
++            // break;
++        }
++    }
++
++    return true;
++}
++
++extern "C" bool test_manifold(
++    McFlags flags,
++    const McVoid* pSrcMeshVertices,
++    const uint32_t* pSrcMeshFaceIndices,
++    const uint32_t* pSrcMeshFaceSizes,
++    uint32_t numSrcMeshVertices,
++    uint32_t numSrcMeshFaces)
++{
++    std::shared_ptr<hmesh_t> source_hmesh = std::shared_ptr<hmesh_t>(new hmesh_t);
++    double source_hmesh_aabb_diag(0.0);
++
++    if (false == client_input_arrays_to_hmesh_validity(flags, *source_hmesh.get(), source_hmesh_aabb_diag, pSrcMeshVertices, pSrcMeshFaceIndices, pSrcMeshFaceSizes, numSrcMeshVertices, numSrcMeshFaces)) 
++    {
++        return false;
++    }
++
++    if (false == check_input_mesh_validity(*source_hmesh.get())) 
++    {
++        return false;
++    }
++
++    return true;
++}
