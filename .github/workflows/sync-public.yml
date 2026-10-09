@@ -1,0 +1,28 @@
+name: Sync to public repo
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency: sync-public
+
+jobs:
+  sync:
+    if: github.repository == 'blueortho/gps-private'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push develop to public repo
+        env:
+          DEPLOY_KEY: ${{ secrets.PUBLIC_REPO_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git push git@github.com:blueortho/gps.git HEAD:refs/heads/develop
